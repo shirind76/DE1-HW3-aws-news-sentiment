@@ -1,0 +1,11 @@
+content_type,source,sentiment_volatility
+article,bbc,
+article,cnbc,
+article,cnn,
+article,german,
+article,reuters,
+youtube,cnbc_fast_money,
+youtube,cnbc_news,
+youtube,cnn_news,
+youtube,fox_news,
+youtube,reuters_powell,
