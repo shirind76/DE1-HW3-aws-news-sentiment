@@ -365,17 +365,34 @@ These results suggest that the medium plays a central role in shaping sentiment 
 
 ## AWS Cost Estimation
 
-The analysis was conducted using AWS free-tier and low-cost managed services. Estimated costs include both final execution and trial-and-error runs during development.
+This project relies on AWS free-tier and low-cost managed services.  
+Service usage is tracked programmatically during execution and multiplied by official AWS unit prices to produce transparent and reproducible cost estimates.
 
-| Service | Approximate Usage | Estimated Cost |
-|-------|------------------|----------------|
-| Amazon Translate | ~25,000 characters | ~$0.38 |
-| Amazon Comprehend | ~20 API calls | ~$0.02 |
-| Amazon Transcribe | ~900 seconds audio | ~$0.36 |
-| **Total** |  | **~$0.09** |
+The pipeline records:
+- Characters processed by **Amazon Translate**
+- Sentiment analysis calls made to **Amazon Comprehend**
+- Audio duration (in seconds) processed by **Amazon Transcribe**
 
+All cost results are saved automatically to `output/csv/aws_costs.csv` and uploaded to Amazon S3.
 
-Minor variations in sentiment scores may occur due to updates in AWS managed models.
+### Cost Results 
+
+| Service | Recorded Usage | Estimated Cost (USD) |
+|------|---------------|---------------------|
+| Amazon Translate | 1,199 characters | $0.018 |
+| Amazon Comprehend | 10 API calls | $0.001 |
+| Amazon Transcribe | 900 seconds audio | $0.360 |
+| **Total** |  | **$0.379** |
+
+source: `output/csv/aws_costs.csv`
+
+### Trial-and-Error Costs
+
+The table above reflects a full successful pipeline run.  
+Additional trial-and-error executions during development (debugging, testing transcription and sentiment analysis) increase usage slightly, but the **total project cost remains below $1**.
+
+Minor cost variations may occur due to changes in input size or AWS model updates.
+
 
 ---
 
