@@ -366,14 +366,39 @@ These results suggest that the medium plays a central role in shaping sentiment 
 ## AWS Cost Estimation
 
 This project relies on AWS free-tier and low-cost managed services.  
-Service usage is tracked programmatically during execution and multiplied by official AWS unit prices to produce transparent and reproducible cost estimates.
+Service usage is tracked programmatically during pipeline execution and combined with official AWS on-demand unit pricing to produce transparent and reproducible cost estimates.
 
-The pipeline records:
-- Characters processed by **Amazon Translate**
-- Sentiment analysis calls made to **Amazon Comprehend**
-- Audio duration (in seconds) processed by **Amazon Transcribe**
+Specifically:
+- **Amazon Translate** costs are calculated based on the number of characters translated.
+- **Amazon Comprehend** costs are derived from the number of sentiment analysis API calls.
+- **Amazon Transcribe** costs are computed from the total duration of processed audio (in seconds).
 
-All cost results are saved automatically to `output/csv/aws_costs.csv` and uploaded to Amazon S3.
+The total project cost is obtained by summing the individual service costs.  
+All cost calculations are automatically saved to `output/csv/aws_costs.csv` and uploaded to Amazon S3, ensuring full reproducibility and auditability of cloud usage.
+
+```python 
+translate_cost = AWS_USAGE["translate_chars"] * PRICE_TRANSLATE_PER_CHAR
+comprehend_cost = AWS_USAGE["comprehend_calls"] * PRICE_COMPREHEND_PER_CALL
+transcribe_cost = AWS_USAGE["transcribe_seconds"] * PRICE_TRANSCRIBE_PER_SEC
+
+total_cost = translate_cost + comprehend_cost + transcribe_cost
+
+
+df_cost = pd.DataFrame([
+    {"service": "Amazon Translate", "usage": AWS_USAGE["translate_chars"], "cost_usd": translate_cost},
+    {"service": "Amazon Comprehend", "usage": AWS_USAGE["comprehend_calls"], "cost_usd": comprehend_cost},
+    {"service": "Amazon Transcribe", "usage": AWS_USAGE["transcribe_seconds"], "cost_usd": transcribe_cost},
+    {"service": "TOTAL", "usage": "", "cost_usd": total_cost}
+])
+
+df_cost.to_csv("output/csv/aws_costs.csv", index=False)
+
+s3.upload_file(
+    "output/csv/aws_costs.csv",
+    bucket_name,
+    "output/csv/aws_costs.csv"
+)
+```
 
 ### Cost Results 
 
@@ -386,14 +411,18 @@ All cost results are saved automatically to `output/csv/aws_costs.csv` and uploa
 
 source: `output/csv/aws_costs.csv`
 
-### Trial-and-Error Costs
 
 The table above reflects a full successful pipeline run.  
-Additional trial-and-error executions during development (debugging, testing transcription and sentiment analysis) increase usage slightly, but the **total project cost remains below $1**.
+Additional trial-and-error executions during development (debugging, testing transcription and sentiment analysis) increase usage slightly, but the **total project cost remains below $1.5**.
+Based on observed development iterations, the following conservative multipliers were applied:
 
-Minor cost variations may occur due to changes in input size or AWS model updates.
 
-
+| Service | Final Run Cost | Trial Multiplier | Estimated Total |
+|------|---------------|------------------|-----------------|
+| Amazon Translate | ~$0.02 | ×6 | ~$0.04 |
+| Amazon Comprehend | ~$0.01 | ×6 | ~$0.04 |
+| Amazon Transcribe | ~$0.36 | ×3 | ~$0.54 |
+| **Total Estimated Cost** |  |  | **~$1.26** |
 ---
 
 ### Reproducibility
